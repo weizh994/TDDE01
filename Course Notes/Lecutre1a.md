@@ -22,7 +22,7 @@
 * Reinforcement learning
 * Transfer learning: use knowledge from some domain to train better models in a similar domain
   
-$y=w_0+w_1\cdot x+\epsilon, \epsilon N(0,d^2)$
+$y=w_0+w_1\cdot x+\varepsilon, \varepsilon N\sim(0,\sigma^2)$
 
 ## K-nearest neighbor model
 * Can be classification or regression
