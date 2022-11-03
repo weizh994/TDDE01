@@ -39,3 +39,32 @@ $y=w_0+w_1\cdot x+\varepsilon, \varepsilon N\sim(0,\sigma^2)$
     train=data[id,]
     test=data[-id,]
 ```
+
+## Typical error functions
+* Regression, MSE:  
+    $R(Y,\hat{Y})={1\over N} \sum _{i=1}^N(Y_i-\hat{Y}_i)^2$
+* Classification, misclassification rate  
+    $R(Y,\hat{Y})={1\over N} \sum _{i=1}^NI(Y_i\neq\hat{Y}_i)$
+* Classification, cross-entropy for $M$ classes $C_1, ... , C_M$:  
+    $R(Y,\hat{p}(Y))=-\sum_{i=1}^N\sum_{m=1}^MI(Y_i=C_m)\log \hat{p}(Y_i=C_m)$
+
+## Model types
+* Parametric models
+  * Have certain number of parameters independently of the size of training data
+  * Assumption about of the data distribution
+  * Ex: logistic regression
+* Nonparametric models
+  * Number of parameters(complexity) changes with training data
+    * Example: K-NN classifier
+
+## Curse of dimensionality
+* Given data $T$:
+  * Features $x_1,..x_p$
+  * Targets $y_1,...,y_r$
+* When p increases models using "proximity" measures work badly
+* Curse of dimensionality: A point has no "near neighbors" in high dimensions $\rightarrow$ using class labels of a neighbor can be misleadning
+  * Distance-based methods affected
+* Real data normally has much lower effective dimension
+  * Dimensionality reduction techniques
+* Smoothness assumption
+  * small change in one of $x's$ should lead to small change in $y\rightarrow$interpolation(插值)
