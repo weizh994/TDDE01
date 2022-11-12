@@ -1,7 +1,7 @@
 # setwd("/Users/Amir/Desktop/Liu/ML/L1")
 
 # install.packages("kknn")
-# library(kknn)
+library(kknn)
 
 ## Divide into train, valid and test sets
 data <- read.csv("optdigits.csv")
@@ -34,7 +34,15 @@ print(cm_test)
 miss_test <- nrow(test) - sum(diag(cm_test))
 miss_rate_test <- miss_test / nrow(test)
 
-temp <- which(as.numeric(as.character(model_train$fitted.values)) == 8)
+# All the eights we predicted
+# temp <- which(as.numeric(as.character(model_train$fitted.values)) == 8)
+ 
+# All the true eights
+temp <- which(as.numeric(train[,65]) == 8)
+
+# True and correctly predicted eights
+# temp <- which(as.numeric(train[,65]) == 8 && as.numeric(as.character(model_train$fitted.values)) == 8)
+
 eights_probs <- model_train$prob[temp, 9]
 eights_indices <- temp[order(eights_probs, decreasing = T)]
 
