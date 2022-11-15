@@ -1,91 +1,129 @@
-#setwd("~/dev/tdde01/lab1")
-
-# install.packages("kknn")
-library(kknn)
-
-## Divide into train, valid and test sets
-
-## 1)
-data <- read.csv("optdigits.csv")
-n <- nrow(data)
+# Don't forget to setwd 
 set.seed(12345)
 
-train_ids <- sample(1:n, floor(n * 0.5))
-train <- data[train_ids, ]
-id1 <- setdiff(1:n, train_ids)
-id2 <- sample(id1, floor(n * 0.25))
-valid <- data[id2, ]
-id3 <- setdiff(id1, id2)
-test <- data[id3, ]
 
-## 2)
-# Fit a kknn model to our training data and test it on the training data
-model_train <- kknn(as.factor(train[, 65]) ~ ., train = train, test = train, k = 30, kernel = "rectangular")
+## Task 1
+# Read in data and factorize target column
+data <- read.csv("optdigits.csv")
+data[, 65] <- as.factor(data[, 65])
 
-# Confusion matrix for predictions on training data
-cm_train <- table(train[, 65], model_train$fitted.values)
-print(cm_train)
-miss_train <- nrow(train) - sum(diag(cm_train))
-miss_rate_train <- miss_train / nrow(train)
+# Rename the target column to Y for easier referencing
+library(dplyr)
+data <- rename(data, Y=X0.26)
 
-# Fit a kknn model to our training data and test it on the test data
-model_test <- kknn(as.factor(train[, 65]) ~ ., train = train, test = test, k = 30, kernel = "rectangular")
+# Divide the data
+N <- nrow(data)
+ids <- 1:N
 
-# Confusion matrix for predictions on test data
-cm_test <- table(test[, 65], model_test$fitted.values)
-print(cm_test)
-miss_test <- nrow(test) - sum(diag(cm_test))
-miss_rate_test <- miss_test / nrow(test)
+# Sample training data
+ids.train <- sample(ids, floor(N * .5))
+data.train <- data[ids.train, ]
+N.train <- length(ids.train)
+ids <- setdiff(ids, ids.train) # Remove picked ids
 
-## 3)
-# All the true eights
-temp <- which(as.numeric(train[,65]) == 8)
-eights_probs <- model_train$prob[temp, 9]
-eights_indices <- temp[order(eights_probs, decreasing = T)]
+# Sample validation ids
+ids.val <- sample(ids, floor(N * .25))
+data.val <- data[ids.val, ]
+N.val <- length(ids.val)
+ids <- setdiff(ids, ids.val) # Remove picked ids
 
-eights_count = length(eights_indices)    
+# Use remaining ids for testing
+data.test = data[ids,]
+N.test <- length(ids)
 
-# Two lowest confidence
-lowest1 <- matrix(as.numeric(train[eights_indices[eights_count], -65]), 8, 8, byrow = T)
-lowest2 <- matrix(as.numeric(train[eights_indices[eights_count-1], -65]), 8, 8, byrow = T)
-lowest3 <- matrix(as.numeric(train[eights_indices[eights_count-2], -65]), 8, 8, byrow = T)
 
-heatmap(lowest1, Rowv = NA, Colv = NA)
-heatmap(lowest2, Rowv = NA, Colv = NA)
-heatmap(lowest3, Rowv = NA, Colv = NA)
+## Task 2
+# Fit a KNN model with K=30 and test it on the training data
+library(kknn)
+model.train <- kknn(data.train$Y ~ ., data.train, data.train, k = 30, kernel = "rectangular")
+cm.train <- table(data.train$Y, model.train$fitted.values)
+miss.train <- (N.train - sum(diag(cm.train))) / N.train
 
-# Two highest confidence
-highest1 <- matrix(as.numeric(train[eights_indices[1], -65]), 8, 8, byrow = T)
-highest2 <- matrix(as.numeric(train[eights_indices[2], -65]), 8, 8, byrow = T)
+# Fit another KNN model with K=30 but test it on the test data
+model.test <- kknn(data.train$Y ~ ., data.train, data.test, k = 30, kernel = "rectangular")
+cm.test <- table(data.test$Y, model.test$fitted.values)
+miss.test <- (N.test - sum(diag(cm.test))) / N.test
+# TODO: Comment on the quality of predictions for different digits based on confusion matrices
 
-heatmap(highest1, Rowv = NA, Colv = NA)
-heatmap(highest2, Rowv = NA, Colv = NA)
 
-## 4)
-train_err <- c()
-valid_err <- c()
-for (k_ in 1:30) {
-  # Training 
-  model_train_k <- kknn(as.factor(train[, 65]) ~ ., train = train, test = train, k = k_, kernel = "rectangular")
-  cm_train_k <- table(train[, 65], model_train_k$fitted.values)
-  train_err <- c(train_err, (nrow(train) - sum(diag(cm_train_k))) / nrow(train))
+## Task 3
+# TODO: Mention that question is ambigious. 
+# We interpreted it as: Only look at instances where the true target is 8. Then look at the probabilities our model has for them.
+# REGARDLESS of if the model predicts them at all.
+
+# All instances with true target 8 in the training data
+eights <- data.train[which(data.train$Y == 8),]
+
+# Fit another model and test it only on the eights. 
+# Save the resulting probabilities in a column p.
+model.eights <- kknn(data.train$Y ~ ., data.train, eights, k = 30, kernel = "rectangular")
+eights$p <- model.eights$prob[,9]
+
+# Sort the instances based on their probability
+eights.sorted <- eights[order(eights$p, decreasing = T),]
+
+# Generate matrices and heatmaps for two highest and the three lowest probabilities
+eights.indices <- c(1, 2, nrow(eights), nrow(eights) - 1, nrow(eights) - 2)
+for (i in eights.indices) {
+  matrix <- matrix(as.numeric(eights.sorted[i, 1:64]), 8, 8, byrow = T)
+  print(sprintf("Heatmap for instance %s with probability %f", rownames(eights.sorted)[i], eights.sorted[i, 66]))
+  heatmap <- heatmap(matrix, Rowv = NA, Colv = NA)
+}
+# TODO: Comment on how hard they are to recognize
+
   
-  # Validation
-  model_valid_k <- kknn(as.factor(train[, 65]) ~ ., train = train, test = valid, k = k_, kernel = "rectangular")
-  cm_valid_k <- table(valid[, 65], model_valid_k$fitted.values)
-  valid_err <- c(valid_err, (nrow(valid) - sum(diag(cm_valid_k))) / nrow(valid))
+## Task 4 and cross-entropy computation of Task 5
+err.train <- c()
+err.val <- c()
+err.entropy <- c()
+for (k in 1:30) {
+  print(sprintf("Training model for k=%d", k))
+  # Train and test on training data
+  model.train.k <- kknn(data.train$Y ~ ., data.train, data.train, k = k, kernel = "rectangular")
+  cm.train.k <- table(data.train$Y, model.train.k$fitted.values)
+  err.train <- c(err.train, (N.train - sum(diag(cm.train.k))) / N.train)
+    
+  # Train on training data and test on validation data
+  model.val.k <- kknn(data.train$Y ~ ., data.train, data.val, k = k, kernel = "rectangular")
+  cm.val.k <- table(data.val$Y, model.val.k$fitted.values)
+  err.val <- c(err.val, (N.val - sum(diag(cm.val.k))) / N.val)
+  
+  # Cross-entropy error
+  log_p_hats <- c()
+  for (i in 1:N.val) {
+    y <- as.numeric(as.character(data.val$Y[i]))
+    p_hat <- model.val.k$prob[i, y + 1]
+    log_p_hats <- c(log_p_hats, log(p_hat + 1e-15))
+  }
+  err.entropy <- c(err.entropy, -sum(log_p_hats))
 }
 
-print(train_err)
-print(valid_err)
+# Data frame containing all errors
+errors <- data.frame(err.train, err.val, err.entropy)
+
+# Plot training and validation missclassification rate
+plot(x=1:30, y=err.train, col = "blue")
+points(x=1:30, y=err.val, col = "orange")
+
+# Optimal K for missclassification rate 
+K.miss <- which.min(err.val)
+
+# Train model on training data and test on test data
+model.test.opt <- kknn(data.train$Y ~ ., data.train, data.test, k = K.miss, kernel = "rectangular")
+cm.test.opt <- table(data.test$Y, model.test.opt$fitted.values)
+err.test.opt <- (N.test - sum(diag(cm.test.opt))) / N.test
+print(sprintf("Train error for K = %s is %f", K.miss, err.train[K.miss]))
+print(sprintf("Validation error for K = %s is %f", K.miss, err.val[K.miss]))
+print(sprintf("Test error for K = %s is %f", K.miss, err.test.opt))
+# TODO: Comment on comparison
 
 
-plot(x=1:30,y=train_err,col="red",type="o", lty=1)
+## Task 5
+# Plot cross-entropy error
+plot(x=1:30, y = err.entropy, col = "red")
 
-points(x=1:30, y=valid_err, col="blue", type="o")
-lines(x=1:30,y=valid_err,col="blue", lty=2)
+# Optimal K for cross-entropy error
+K.entropy <- which.min(err.entropy)
+print(K.entropy)
 
-model_test_8 = kknn(as.factor(train[, 65])~., train = train, test = test, k = 8, kernel = "rectangular")
-cm_test_8 <- table(test[, 65], model_test_8$fitted.values)
-test_err <- (nrow(test) - sum(diag(cm_test_8))) / nrow(test)
-print(test_err)
+# TODO: Answer why cross-entropy might be a better choice as error function
