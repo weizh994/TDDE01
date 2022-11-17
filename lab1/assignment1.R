@@ -38,19 +38,16 @@ library(kknn)
 model.train <- kknn(data.train$Y ~ ., data.train, data.train, k = 30, kernel = "rectangular")
 cm.train <- table(data.train$Y, model.train$fitted.values)
 miss.train <- (N.train - sum(diag(cm.train))) / N.train
+quality.train <- sapply(1:10, FUN = function(c) { cm.train[c,c] / sum(cm.train[,c]) })
 
 # Fit another KNN model with K=30 but test it on the test data
 model.test <- kknn(data.train$Y ~ ., data.train, data.test, k = 30, kernel = "rectangular")
 cm.test <- table(data.test$Y, model.test$fitted.values)
 miss.test <- (N.test - sum(diag(cm.test))) / N.test
-# TODO: Comment on the quality of predictions for different digits based on confusion matrices
+quality.test <- sapply(1:10, FUN = function(c) { cm.test[c,c] / sum(cm.test[,c]) })
 
 
 ## Task 3
-# TODO: Mention that question is ambigious. 
-# We interpreted it as: Only look at instances where the true target is 8. Then look at the probabilities our model has for them.
-# REGARDLESS of if the model predicts them at all.
-
 # All instances with true target 8 in the training data
 eights <- data.train[which(data.train$Y == 8),]
 
@@ -67,9 +64,10 @@ eights.indices <- c(1, 2, nrow(eights), nrow(eights) - 1, nrow(eights) - 2)
 for (i in eights.indices) {
   matrix <- matrix(as.numeric(eights.sorted[i, 1:64]), 8, 8, byrow = T)
   print(sprintf("Heatmap for instance %s with probability %f", rownames(eights.sorted)[i], eights.sorted[i, 66]))
-  heatmap <- heatmap(matrix, Rowv = NA, Colv = NA)
+  png(file=sprintf("heatmap_%d.png", i))
+  heatmap <- heatmap(matrix, Rowv = NA, Colv = NA, lab)
+  dev.off()
 }
-# TODO: Comment on how hard they are to recognize
 
   
 ## Task 4 and cross-entropy computation of Task 5
@@ -102,8 +100,10 @@ for (k in 1:30) {
 errors <- data.frame(err.train, err.val, err.entropy)
 
 # Plot training and validation missclassification rate
+png(file="plot_train_val")
 plot(x=1:30, y=err.train, col = "blue")
 points(x=1:30, y=err.val, col = "orange")
+dev.off()
 
 # Optimal K for missclassification rate 
 K.miss <- which.min(err.val)
@@ -115,7 +115,6 @@ err.test.opt <- (N.test - sum(diag(cm.test.opt))) / N.test
 print(sprintf("Train error for K = %s is %f", K.miss, err.train[K.miss]))
 print(sprintf("Validation error for K = %s is %f", K.miss, err.val[K.miss]))
 print(sprintf("Test error for K = %s is %f", K.miss, err.test.opt))
-# TODO: Comment on comparison
 
 
 ## Task 5
