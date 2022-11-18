@@ -41,3 +41,27 @@ mc_error3=(Pred_table3[1,1]+Pred_table3[2,2])/sum(Pred_table3)
 plot(data2_2[data2_2$Prob>=r3,2],data2_2[data2_2$Prob>=r3,1],col="red",xlim = range(min(data2_2$data.Age),max(data2_2$data.Age)),ylim = range(min(data2_2$data.Plasma),max(data2_2$data.Plasma)))
 points(data2_2[data2_2$Prob<r3,2],data2_2[data2_2$Prob<r3,1],col="blue")
 
+
+
+
+## task5
+x1=data$Plasma
+x2=data$Age
+z1=x1^4
+z2=x1^3*x2
+z3=x1^2*x2^2
+z4=x1*x2^3
+z5=x2^4
+y=data$Diabetes
+data5=data.frame(x1,x2,z1,z2,z3,z4,z5,y)
+m5=glm(as.factor(data5$y)~.,data5,family = "binomial")
+Prob5=predict(m5, type="response")
+Pred5=ifelse(Prob5>=r1, "Diabetes", "No Diabetes")
+Pred_table5=table(data5$y, Pred5)
+mc_error5=(Pred_table5[1,1]+Pred_table5[2,2])/sum(Pred_table5)
+data5_2=data.frame(data$Plasma,data$Age,Prob5)
+plot(data5_2[data5_2$Prob>=r1,2],data5_2[data5_2$Prob>=r1,1],col="red",xlim = range(min(data5_2$data.Age),max(data5_2$data.Age)),ylim = range(min(data5_2$data.Plasma),max(data5_2$data.Plasma)))
+points(data5_2[data5_2$Prob<r1,2],data5_2[data5_2$Prob<r1,1],col="blue")
+data5_3=data.frame(1,x1,x2,z1,z2,z3,z4,z5)
+z=t(as.matrix(m5$coefficients))%*%t(as.matrix(data5_3))
+plot(z,exp(z)/(1+exp(z)))
