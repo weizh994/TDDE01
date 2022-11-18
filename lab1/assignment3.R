@@ -18,6 +18,10 @@ mc_error1=(Pred_table[1,1]+Pred_table[2,2])/sum(Pred_table)
 data2_2=data.frame(data$Plasma,data$Age,Prob)
 plot(data2_2[data2_2$Prob>=r1,2],data2_2[data2_2$Prob>=r1,1],col="red",xlim = range(min(data2_2$data.Age),max(data2_2$data.Age)),ylim = range(min(data2_2$data.Plasma),max(data2_2$data.Plasma)))
 points(data2_2[data2_2$Prob<r1,2],data2_2[data2_2$Prob<r1,1],col="blue")
+data2_3=data.frame(1,data$Plasma,data$Age)
+z2=t(as.matrix(m2$coefficients))%*%t(data2_3)
+plot(z2,exp(z2)/(1+exp(z2)),xlim = range(-8,8))
+
 slope <- -m2$coefficients[3]/m2$coefficients[2]
 intercept <- -m2$coefficients[1]/m2$coefficients[2]
 abline(intercept,slope)
@@ -63,5 +67,8 @@ data5_2=data.frame(data$Plasma,data$Age,Prob5)
 plot(data5_2[data5_2$Prob>=r1,2],data5_2[data5_2$Prob>=r1,1],col="red",xlim = range(min(data5_2$data.Age),max(data5_2$data.Age)),ylim = range(min(data5_2$data.Plasma),max(data5_2$data.Plasma)))
 points(data5_2[data5_2$Prob<r1,2],data5_2[data5_2$Prob<r1,1],col="blue")
 data5_3=data.frame(1,x1,x2,z1,z2,z3,z4,z5)
-z=t(as.matrix(m5$coefficients))%*%t(as.matrix(data5_3))
-plot(z,exp(z)/(1+exp(z)))
+z5=t(as.matrix(m5$coefficients))%*%t(as.matrix(data5_3))
+#plot(z5,exp(z5)/(1+exp(z5)),xlim = range(-8,8))
+slope <- -m5$coefficients[3]/m5$coefficients[2]
+intercept <- -m5$coefficients[1]/m5$coefficients[2]
+abline(intercept,slope)
