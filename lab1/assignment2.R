@@ -31,6 +31,7 @@ N.test = nrow(data.test)
 # Train model and explicitly remove intercept
 model <- lm(data.train$Y ~ . - 1, data.train)
 model.info <- summary(model)
+print(coefficients(model))
 
 # Get predictions on training and test data
 pred.train <- predict(model, data.train)
@@ -47,28 +48,34 @@ err.test <- mean((data.test$Y - pred.test) ^ 2)
 loglikelihood <- function(theta, sigma) {
   N = nrow(data.train)
   
+  theta_mat <- as.matrix(theta)
+  train_mat <- as.matrix(data.train[,-1])
+  
   term1 <- -(N / 2) * log(2 * pi)
   term2 <- (N / 2) * log(sigma ^ 2)
-  term3 <- (1 / (2 * sigma ^ 2)) * sum((data.train$Y - as.matrix(data.train[,-1]) %*% as.matrix(theta)) ^ 2)
+  term3 <- (1 / (2 * sigma ^ 2)) * sum((data.train$Y - (train_mat %*% theta_mat)) ^ 2)
   
   term1 - term2 - term3
 }
 
 ## Subtask b.
-ridge <- function(theta, params) {
-  -loglikelihood(theta, params[[1]]) + params[[2]] * sum(theta ^ 2)
+ridge <- function(params, lambda) {
+  -loglikelihood(params[1:ncol(data.train)-1], params[ncol(data.train)]) + lambda * sum(params[[1]] ^ 2)
 }
 
 ## Subtask c.
 ridgeopt <- function(lambda) {
+  # Initialize theta to just a sequence of numbers
   theta <- seq(from=1, to=ncol(data.train) - 1)
+  # Initialize sigma arbitrarily to 0.5
   sigma <- 0.5
-  res <- optim(theta, ridge, gr = NULL, c(sigma, lambda), method = "BFGS")
+  
+  res <- optim(c(theta, sigma), ridge, gr = NULL, lambda, method = "BFGS")
   res$par
 }
 
 ## Subtask d.
-DF <- function(data, lambda) {
+DF <- function(model, lambda) {
   
 }
 
@@ -77,9 +84,12 @@ DF <- function(data, lambda) {
 err.train = c()
 err.test = c()
 for (lambda in c(1, 100, 1000)) {
-  theta <- ridgeopt(lambda)
+  params <- ridgeopt(lambda)
+  theta <- params[-17]
+  sigma <- params[17]
   print(sprintf("Parameter vector theta for lambda=%d:", lambda))
-  print(theta)
+  print(params)
+  print(sprintf("Dispersion for lambda=%d is %f", lambda, sigma))
   
   diff.train <- data.train$Y - as.matrix(data.train[,-1]) %*% theta
   err.train <- c(err.train, mean(diff.train ^ 2))
@@ -88,6 +98,9 @@ for (lambda in c(1, 100, 1000)) {
   err.test <- c(err.test, mean(diff.test ^ 2))
 }
 
-plot(c(1, 100, 1000), err.train)
+errors <- data.frame(err.train, err.test)
 
-plot(c(1, 100, 1000), err.test)
+png(file="plot_ridge.png")
+plot(c(1, 100, 1000), err.train, col = "blue")
+points(c(1, 100, 1000), err.test, col = "orange")
+dev.off()

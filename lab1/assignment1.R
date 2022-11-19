@@ -119,10 +119,10 @@ print(sprintf("Test error for K = %s is %f", K.miss, err.test.opt))
 
 ## Task 5
 # Plot cross-entropy error
+png(file="plot_entropy")
 plot(x=1:30, y = err.entropy, col = "red")
+dev.off()
 
 # Optimal K for cross-entropy error
 K.entropy <- which.min(err.entropy)
 print(K.entropy)
-
-# TODO: Answer why cross-entropy might be a better choice as error function
