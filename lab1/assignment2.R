@@ -76,13 +76,16 @@ ridgeopt <- function(lambda) {
 
 ## Subtask d.
 DF <- function(model, lambda) {
-  
+  X <- as.matrix(data.train[,-1])
+  res <- X %*% solve(t(X) %*% X + lambda) %*% t(X)
+  sum(diag(res))
 }
 
 
 ## Task 4
 err.train = c()
 err.test = c()
+df.train = c() 
 for (lambda in c(1, 100, 1000)) {
   params <- ridgeopt(lambda)
   theta <- params[-17]
@@ -96,11 +99,8 @@ for (lambda in c(1, 100, 1000)) {
   
   diff.test <- data.test$Y - as.matrix(data.test[,-1]) %*% theta
   err.test <- c(err.test, mean(diff.test ^ 2))
+  
+  df.train <- c(df.train, DF(theta, lambda))
 }
 
 errors <- data.frame(err.train, err.test)
-
-png(file="plot_ridge.png")
-plot(c(1, 100, 1000), err.train, col = "blue")
-points(c(1, 100, 1000), err.test, col = "orange")
-dev.off()
