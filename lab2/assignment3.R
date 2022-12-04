@@ -66,6 +66,10 @@ res=optim(matrix(0,nrow = 100, ncol = 1), fn=mseTrain,  method="BFGS")
 
 plot(as.numeric(TrainE), type="l", col="blue",xlab = "Iteration" ,ylab="Error",ylim = range(0,0.1),xlim =  range(500,5000))
 points(as.numeric(TestE), type="l", col="red")
+abline(h=TestE[which.min(TestE)],lty=2)
+abline(v=which.min(TestE),lty=2)
+
+
 print(TrainE[which.min(TestE)])
 print(TestE[which.min(TestE)])
 

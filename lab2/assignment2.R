@@ -74,7 +74,28 @@ print(F1_Score)
 
 
 #Task6
-reg_model=glm(as.factor(y)~.,test,family = "binomial")
-Prob=predict(reg_model, type="response")
-
-
+reg_model=glm(as.factor(y)~.,train,family = "binomial")
+Prob=predict(reg_model,test, type="response")
+ProbT = predict(finalTree,test,type="vector")
+Pred=list()
+PredT=list()
+TPR=list()
+TPRT=list()
+FPR=list()
+FPRT=list()
+r=0.05
+k=1
+while(r<=0.95){
+  .GlobalEnv$Pred[[k]]=ifelse(Prob>r, "Pred_Yes", "Pred_No")
+  .GlobalEnv$PredT[[k]]=ifelse(ProbT[,2]>r, "Pred_Yes", "Pred_No")
+  MC.table=table(test$y,.GlobalEnv$Pred[[k]])
+  MCT.table=table(test$y,.GlobalEnv$PredT[[k]])
+  .GlobalEnv$TPR[[k]]=MC.table[2,2]/(MC.table[2,2]+MC.table[2,1])
+  .GlobalEnv$FPR[[k]]=MC.table[1,1]/(MC.table[1,2]+MC.table[1,1])
+  .GlobalEnv$TPRT[[k]]=MCT.table[2,2]/(MCT.table[2,2]+MCT.table[2,1])
+  .GlobalEnv$FPRT[[k]]=MCT.table[1,1]/(MCT.table[1,2]+MCT.table[1,1])
+  .GlobalEnv$r=.GlobalEnv$r+0.05
+  .GlobalEnv$k= .GlobalEnv$k+1
+}
+plot(FPR,TPR,type="l",col="blue")
+points(FPRT,TPRT,type="l",col="red")
