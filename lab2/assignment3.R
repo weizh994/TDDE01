@@ -24,8 +24,9 @@ plot(abs(PCA2$loadings[,1]),main="Traceplot, PC1")
 
 index=order(abs(PCA2$loadings[,1]),decreasing=TRUE)[1:5]
 print(PCA2$loadings[index,1])#5 features contribute mostly (by the absolute value)
-ggplot()
-#TODO ggplot
+scores=data.frame(PC1=PCA2$scores[,1],PC2=PCA2$scores[,2],ViolentCrimesPerPop=data$ViolentCrimesPerPop)
+ggplot(scores, aes(x=PC1,y=PC2,color=ViolentCrimesPerPop) ) +
+  geom_point()
 
 
 
@@ -35,9 +36,6 @@ set.seed(12345)
 id=sample(1:n, floor(n*0.5)) 
 train=data[id,] 
 test=data[-id,]
-#scaler=preProcess(data[-101])
-#trainS=predict(scaler,train[-101])
-#testS=predict(scaler,test[-101])
 scaler=preProcess(data)
 trainS=predict(scaler,train)
 testS=predict(scaler,test)
@@ -47,7 +45,6 @@ pred.train <- predict(model, trainS)
 pred.test <- predict(model, testS)
 err.train <- mean((train$ViolentCrimesPerPop - pred.train) ^ 2)
 err.test <- mean((test$ViolentCrimesPerPop - pred.test) ^ 2)
-#TODO if scale is correct
 
 #Task4
 
