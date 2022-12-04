@@ -20,7 +20,7 @@ print(PCA1$values[2])
 
 PCA2=princomp(dataX)
 #PC1
-plot(PCA2$loadings[,1],main="Traceplot, PC1")
+plot(abs(PCA2$loadings[,1]),main="Traceplot, PC1")
 
 index=order(abs(PCA2$loadings[,1]),decreasing=TRUE)[1:5]
 print(PCA2$loadings[index,1])#5 features contribute mostly (by the absolute value)
@@ -35,9 +35,12 @@ set.seed(12345)
 id=sample(1:n, floor(n*0.5)) 
 train=data[id,] 
 test=data[-id,]
-scaler=preProcess(data[-101])
-trainS=predict(scaler,train[-101])
-testS=predict(scaler,test[-101])
+#scaler=preProcess(data[-101])
+#trainS=predict(scaler,train[-101])
+#testS=predict(scaler,test[-101])
+scaler=preProcess(data)
+trainS=predict(scaler,train)
+testS=predict(scaler,test)
 model=lm(train$ViolentCrimesPerPop~.,trainS)
 predict(model,trainS)
 pred.train <- predict(model, trainS)
@@ -47,21 +50,22 @@ err.test <- mean((test$ViolentCrimesPerPop - pred.test) ^ 2)
 #TODO if scale is correct
 
 #Task4
-trainZ=data.frame(0,trainS)
-testZ=data.frame(0,testS)
+
 TestE=list()
 TrainE=list()
 k=0
 mseTrain= function(w){
-  
-  MSE_train=mean((train$ViolentCrimesPerPop - t(w)%*%t(trainZ)) ^ 2)
-  MSE_test=mean((test$ViolentCrimesPerPop - t(w)%*%t(trainZ)) ^ 2)
+  MSE_train=mean((train$ViolentCrimesPerPop - t(w)%*%t(train[-101])) ^ 2)
+  MSE_test=mean((test$ViolentCrimesPerPop - t(w)%*%t(test[-101])) ^ 2)
   .GlobalEnv$k= .GlobalEnv$k+1
   .GlobalEnv$TrainE[[k]]=MSE_train
   .GlobalEnv$TestE[[k]]=MSE_test
   return(MSE_train)
 }
-res=optim(c(0), fn=mseTrain,  method="BFGS")
+res=optim(matrix(0,nrow = 100, ncol = 1), fn=mseTrain,  method="BFGS")
 
-plot(as.numeric(TrainE), type="l", col="blue", ylim=c(0.05,0.2), ylab="Error")
+plot(as.numeric(TrainE), type="l", col="blue",xlab = "Iteration" ,ylab="Error",ylim = range(0,0.1),xlim =  range(500,5000))
 points(as.numeric(TestE), type="l", col="red")
+print(TrainE[which.min(TestE)])
+print(TestE[which.min(TestE)])
+
